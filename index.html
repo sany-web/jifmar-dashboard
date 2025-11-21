@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Navires JIFMAR</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    select, button { margin: 10px; padding: 5px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>⛵ Suivi des distances - Flotte JIFMAR</h1>
+
+  <label>Navire :</label>
+  <select id="navire"></select>
+
+  <label>Année :</label>
+  <input type="number" id="annee" placeholder="(facultatif)" />
+
+  <button onclick="chargerDonnees()">Afficher</button>
+
+  <div id="graph" style="width:100%;height:600px;"></div>
+
+  <script>
+    async function chargerNavires() {
+      const res = await fetch("http://127.0.0.1:5000/navires");
+      const navires = await res.json();
+      const select = document.getElementById("navire");
+      navires.forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n;
+        opt.textContent = n;
+        select.appendChild(opt);
+      });
+    }
+
+    async function chargerDonnees() {
+      const navire = document.getElementById("navire").value;
+      const annee = document.getElementById("annee").value;
+      const url = new URL("http://127.0.0.1:5000/data");
+      url.searchParams.append("navire", navire);
+      if (annee) url.searchParams.append("annee", annee);
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      const dates = data.map(d => d.Date);
+      const distances = data.map(d => d["Total distance"]);
+
+      const trace = {
+        x: dates,
+        y: distances,
+        type: "scatter",
+        mode: "lines",
+        name: navire,
+        line: { shape: "spline" }
+      };
+
+      const layout = {
+        title: `Évolution de la distance parcourue - ${navire}`,
+        xaxis: { title: "Date" },
+        yaxis: { title: "Distance (milles nautiques)" }
+      };
+
+      Plotly.newPlot("graph", [trace], layout);
+    }
+
+    chargerNavires();
+  </script>
+</body>
+</html>

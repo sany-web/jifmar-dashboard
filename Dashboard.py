@@ -9,9 +9,9 @@ import os
 # 📌 CONFIGURATION
 # ---------------------------------------------------
 
-ROOT = r"C:\Users\SanyLou’eyZEMAL\OneDrive - Jifmar Offshore Services\Documents\Porjet_Monitoring"
-DB_CONSO = os.path.join(ROOT, "bdd2", "conso.db")
-DB_DISTANCE = os.path.join(ROOT, "bdd2", "distance.db")
+# CHEMINS RELATIFS — OBLIGATOIRE POUR STREAMLIT CLOUD
+DB_CONSO = "bdd2/conso.db"
+DB_DISTANCE = "bdd2/distance.db"
 
 st.set_page_config(page_title="Dashboard JIFMAR", layout="wide")
 st.title("📊 Dashboard Global – Navires JIFMAR")
@@ -93,11 +93,14 @@ fig_ann = px.line(
     labels={"conso_l_mille": "Litre / mille", "annee": "Année"}
 )
 
-st.plotly_chart(fig_ann, width="stretch")
+st.plotly_chart(fig_ann, use_container_width=True)
 
-if st.button("📤 Télécharger consommation annuelle (HTML)"):
-    pio.write_html(fig_ann, file=os.path.join(ROOT, f"conso_annuelle_{selected_ship}.html"))
-    st.success("✔ Export créé !")
+st.download_button(
+    "📤 Télécharger consommation annuelle (HTML)",
+    data=pio.to_html(fig_ann),
+    file_name=f"conso_annuelle_{selected_ship}.html",
+    mime="text/html"
+)
 
 st.markdown("---")
 
@@ -131,11 +134,14 @@ fig_dist_cum = px.line(
     labels={"distance_cum": "Distance cumulée (NM)"}
 )
 
-st.plotly_chart(fig_dist_cum, width="stretch")
+st.plotly_chart(fig_dist_cum, use_container_width=True)
 
-if st.button("📤 Télécharger distance cumulée (HTML)"):
-    pio.write_html(fig_dist_cum, file=os.path.join(ROOT, f"distance_cumulee_{selected_ship}.html"))
-    st.success("✔ Export créé !")
+st.download_button(
+    "📤 Télécharger distance cumulée (HTML)",
+    data=pio.to_html(fig_dist_cum),
+    file_name=f"distance_cumulee_{selected_ship}.html",
+    mime="text/html"
+)
 
 
 # --------- DISTANCE JOURNALIÈRE ---------
@@ -152,11 +158,14 @@ fig_daily = px.bar(
     title=f"Distance journalière – {selected_ship}",
 )
 
-st.plotly_chart(fig_daily, width="stretch")
+st.plotly_chart(fig_daily, use_container_width=True)
 
-if st.button("📤 Télécharger distance journalière (HTML)"):
-    pio.write_html(fig_daily, file=os.path.join(ROOT, f"distance_journaliere_{selected_ship}.html"))
-    st.success("✔ Export créé !")
+st.download_button(
+    "📤 Télécharger distance journalière (HTML)",
+    data=pio.to_html(fig_daily),
+    file_name=f"distance_journaliere_{selected_ship}.html",
+    mime="text/html"
+)
 
 
 # --------- CARTE GPS ---------
@@ -165,16 +174,20 @@ st.subheader(f"🗺️ Carte GPS – {selected_ship}")
 
 if len(df_dist_f) > 1:
 
-    fig_map = px.scatter_map(
+    fig_map = px.scatter_mapbox(
         df_dist_f,
         lat="latitude",
         lon="longitude",
         color="vessel",
         title=f"Carte GPS – {selected_ship}",
-        zoom=5
+        zoom=5,
+        height=600
     )
 
-    st.plotly_chart(fig_map, width="stretch")
+    fig_map.update_layout(mapbox_style="open-street-map")
+
+    st.plotly_chart(fig_map, use_container_width=True)
 
 else:
     st.info("Pas assez de données GPS pour afficher la carte.")
+

@@ -180,9 +180,10 @@ with st.sidebar:
     page = st.radio("Navigation", ["📊 Dashboard", "📥 Importer des données"])
     st.markdown("---")
 
+    min_year = int(min(df_ann["annee"].min(), df_dist["year"].min()))
+    max_year = int(max(df_ann["annee"].max(), df_dist["year"].max()))
+
     if page == "📊 Dashboard":
-        min_year = int(min(df_ann["annee"].min(), df_dist["year"].min()))
-        max_year = int(max(df_ann["annee"].max(), df_dist["year"].max()))
 
         year_start, year_end = st.slider(
             "📅 Période",

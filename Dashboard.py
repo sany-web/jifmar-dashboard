@@ -200,7 +200,23 @@ with st.sidebar:
 # PAGE : IMPORT
 # ============================================================
 if page == "📥 Importer des données":
-    st.markdown('<p class="main-title">📥 Importer de nouvelles données</p>', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#1e3a5f,#1d4ed8);
+                border-radius:12px; padding:18px 24px; margin-bottom:20px;">
+        <div style="font-size:2rem;">📥</div>
+        <div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="color:white; font-size:1.5rem; font-weight:700;">Importer de nouvelles données</span>
+                <span style="background:#f59e0b; color:#1a1a1a; font-size:0.7rem; font-weight:800;
+                             padding:3px 10px; border-radius:20px; letter-spacing:1px;">BÊTA</span>
+            </div>
+            <div style="color:#93c5fd; font-size:0.9rem; margin-top:4px;">
+                Cette fonctionnalité est en cours de développement. Des erreurs peuvent survenir selon le format des fichiers.
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.warning("⚠️ **Fonctionnalité bêta** — Vérifiez bien que vos fichiers respectent le format décrit ci-dessous avant d'importer. En cas de problème, contactez l'administrateur du dashboard.")
     st.markdown("Ajoutez les données 2025, 2026 et au-delà **sans toucher au code**.")
 
     tab1, tab2 = st.tabs(["⛽ Consommation (Excel)", "🗺️ Distances GPS (CSV)"])

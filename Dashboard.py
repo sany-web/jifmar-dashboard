@@ -201,13 +201,67 @@ with st.sidebar:
 # ============================================================
 if page == "📥 Importer des données":
     st.markdown('<p class="main-title">📥 Importer de nouvelles données</p>', unsafe_allow_html=True)
-    st.markdown("Ajoutez les fichiers pour les années 2025, 2026 et au-delà sans toucher au code.")
+    st.markdown("Ajoutez les données 2025, 2026 et au-delà **sans toucher au code**.")
 
     tab1, tab2 = st.tabs(["⛽ Consommation (Excel)", "🗺️ Distances GPS (CSV)"])
 
+    # ----------------------------------------------------------------
     with tab1:
-        st.markdown('<p class="section-title">Importer un fichier Consomation_YYYY.xlsx</p>', unsafe_allow_html=True)
-        st.info("Format attendu : `Consomation_2025.xlsx`, `Consomation_2026.xlsx`...")
+        st.markdown('<p class="section-title">Format du fichier Excel consommation</p>', unsafe_allow_html=True)
+
+        with st.expander("📖 Voir le format détaillé attendu", expanded=True):
+            st.markdown("""
+**Nom du fichier :** `Consomation_2025.xlsx` *(un seul 'm' à Consomation — respecter l'orthographe exacte)*
+
+**Structure interne du fichier :**
+""")
+            structure = {
+                "Ligne": ["1","2","3 à 14","15","16","17","18","19 ⚠️","20","21","22","23 ⚠️"],
+                "Colonne A": [
+                    "Titre libre (ex: 'Distances parcourues en Milles Nautiques')",
+                    "Année (ex: 2025)",
+                    "Nom du mois en français (Janvier, Février… Décembre)",
+                    "Vide",
+                    "TOTAL",
+                    "Vide",
+                    "'Consommation annuelle en m3' (texte libre)",
+                    "Vide ou commentaire",
+                    "Vide",
+                    "'Consommation en litre / mille' (texte libre)",
+                    "Vide",
+                    "Vide ou commentaire",
+                ],
+                "Colonnes B / C / D": [
+                    "Vide",
+                    "Noms navires : JIF SURVEYOR | JIF GYPTIS | JIF LACYDON",
+                    "Distance mensuelle en NM (ex: 150.5)",
+                    "Vide",
+                    "Total annuel (formule ou valeur)",
+                    "Vide",
+                    "Vide",
+                    "🔴 Conso annuelle m³ par navire (ex: 72.18 | 79.19 | 105.78)",
+                    "Vide",
+                    "Vide",
+                    "Vide",
+                    "🔴 Conso L/mille par navire (ex: 13.68 | 13.72 | 13.97)",
+                ],
+            }
+            st.dataframe(structure, use_container_width=True, hide_index=True)
+
+            st.warning("⚠️ Les lignes **19** et **23** sont lues directement par le script. Elles doivent contenir les valeurs numériques dans les colonnes B, C, D.")
+            st.info("💡 Les noms des navires ligne 2 doivent être **exactement** : `JIF SURVEYOR`, `JIF GYPTIS`, `JIF LACYDON`")
+
+        # Template download
+        template_path = "template_Consomation_YYYY.xlsx"
+        if os.path.exists(template_path):
+            with open(template_path, "rb") as f:
+                st.download_button(
+                    "📥 Télécharger le fichier template Excel (à remplir)",
+                    data=f.read(),
+                    file_name="template_Consomation_YYYY.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        st.markdown("---")
+        st.markdown('<p class="section-title">Importer votre fichier</p>', unsafe_allow_html=True)
 
         uploaded_conso = st.file_uploader(
             "Glisser/déposer le fichier Excel",
@@ -219,13 +273,60 @@ if page == "📥 Importer des données":
             for f in uploaded_conso:
                 year, ships, msg = import_conso_excel(f, f.name)
                 st.markdown(msg)
-            if any(import_conso_excel(f, f.name)[0] for f in uploaded_conso):
-                load_conso.clear()
-                st.success("Cache rechargé. Rendez-vous sur le Dashboard !")
+            load_conso.clear()
+            st.success("✅ Cache rechargé. Rendez-vous sur le Dashboard !")
 
+    # ----------------------------------------------------------------
     with tab2:
-        st.markdown('<p class="section-title">Importer des CSV GPS par navire</p>', unsafe_allow_html=True)
-        st.info("Format attendu : CSV avec séparateur `;` et colonnes `Date`, `Latitude`, `Longitude`")
+        st.markdown('<p class="section-title">Format des fichiers CSV GPS</p>', unsafe_allow_html=True)
+
+        with st.expander("📖 Voir le format détaillé attendu", expanded=True):
+            st.markdown("""
+**Nom du fichier :** libre (ex: `jifgyptis-satcom-20250101-20250131.csv`)
+
+**Séparateur :** `;` (point-virgule)
+
+**Colonnes obligatoires :**
+""")
+            cols = {
+                "Colonne": ["Date", "Timestamp", "Latitude", "Latitude DMS", "Longitude", "Longitude DMS", "SOG (knots)", "COG (degree)", "Active interface", "Signal", "Total distance (nm)"],
+                "Obligatoire ?": ["✅ Oui","Non","✅ Oui","Non","✅ Oui","Non","Non","Non","Non","Non","Non"],
+                "Format": [
+                    "ISO 8601 : 2025-01-15T14:30:00",
+                    "Timestamp Unix (entier)",
+                    "Décimal (ex: 43.50744)",
+                    "DMS (ex: 43° 30' 27\" N)",
+                    "Décimal (ex: -1.49553)",
+                    "DMS (ex: 001° 29' 44\" W)",
+                    "Nœuds (décimal)",
+                    "Degrés (décimal)",
+                    "Texte libre",
+                    "Texte libre",
+                    "NM (décimal)",
+                ],
+                "Exemple": [
+                    "2025-01-01T00:05:00","1735689900","43.50744",
+                    "43° 30' 27\" N","-1.49553","001° 29' 44\" W",
+                    "0","165","4G_1056401","","0"
+                ]
+            }
+            st.dataframe(cols, use_container_width=True, hide_index=True)
+
+            st.warning("⚠️ Les colonnes `Date`, `Latitude` et `Longitude` sont **obligatoires**. Les autres sont ignorées par le script.")
+            st.info("💡 Un fichier par mois par navire est recommandé, mais plusieurs mois dans un seul fichier fonctionnent aussi.")
+
+        # Template CSV download
+        csv_template_path = "template_GPS_NAVIRE_AAAAMM.csv"
+        if os.path.exists(csv_template_path):
+            with open(csv_template_path, "r", encoding="utf-8") as f:
+                st.download_button(
+                    "📥 Télécharger le fichier template CSV GPS (à remplir)",
+                    data=f.read(),
+                    file_name="template_GPS_NAVIRE_AAAAMM.csv",
+                    mime="text/csv")
+
+        st.markdown("---")
+        st.markdown('<p class="section-title">Importer vos fichiers</p>', unsafe_allow_html=True)
 
         col_v, col_f = st.columns([1, 2])
         with col_v:
@@ -242,7 +343,7 @@ if page == "📥 Importer des données":
                 msg = import_distance_csv(f, f.name, vessel_choice)
                 st.markdown(msg)
             load_distance.clear()
-            st.success("Cache rechargé. Rendez-vous sur le Dashboard !")
+            st.success("✅ Cache rechargé. Rendez-vous sur le Dashboard !")
 
 # ============================================================
 # PAGE : DASHBOARD
